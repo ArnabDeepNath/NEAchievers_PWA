@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, X, GraduationCap, ChevronDown, LogOut, User, LayoutDashboard } from 'lucide-react';
 
@@ -16,8 +17,14 @@ const navLinks = [
 
 export default function Navbar() {
     const { user, userProfile, role, logout, loading } = useAuth();
+    const router = useRouter();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
 
     const dashboardPath = role === 'admin'
         ? '/dashboard/admin'
@@ -57,7 +64,7 @@ export default function Navbar() {
                     <div className="hidden lg:flex items-center gap-3">
                         {loading ? (
                             <div className="w-8 h-8 rounded-full bg-surface-dark animate-pulse" />
-                        ) : user && userProfile ? (
+                        ) : user ? (
                             <div className="flex items-center gap-2">
                                 <div className="relative">
                                     <button
@@ -65,10 +72,10 @@ export default function Navbar() {
                                         className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border border-border hover:border-primary/30 hover:bg-primary-50 transition-all"
                                     >
                                         <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
-                                            {userProfile.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                                            {userProfile?.displayName?.charAt(0)?.toUpperCase() || user.displayName?.charAt(0)?.toUpperCase() || 'U'}
                                         </div>
                                         <span className="text-sm font-medium text-navy max-w-[100px] truncate">
-                                            {userProfile.displayName || 'User'}
+                                            {userProfile?.displayName || user.displayName || 'User'}
                                         </span>
                                         <ChevronDown className={`w-3.5 h-3.5 text-navy-soft transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -78,8 +85,8 @@ export default function Navbar() {
                                             <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                                             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-border z-50 py-2 animate-fade-in-up">
                                                 <div className="px-4 py-2.5 border-b border-border">
-                                                    <p className="text-sm font-semibold text-navy truncate">{userProfile.displayName}</p>
-                                                    <p className="text-xs text-navy-soft truncate">{userProfile.email}</p>
+                                                    <p className="text-sm font-semibold text-navy truncate">{userProfile?.displayName || user.displayName || 'User'}</p>
+                                                    <p className="text-xs text-navy-soft truncate">{userProfile?.email || user.email}</p>
                                                     <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase rounded-full gradient-primary text-white">
                                                         {role}
                                                     </span>
@@ -100,7 +107,7 @@ export default function Navbar() {
                                                 </Link>
                                                 <hr className="my-1 border-border" />
                                                 <button
-                                                    onClick={() => { logout(); setProfileOpen(false); }}
+                                                    onClick={() => { handleLogout(); setProfileOpen(false); }}
                                                     className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-error hover:bg-red-50 transition-colors"
                                                 >
                                                     <LogOut className="w-4 h-4" /> Sign Out
@@ -110,7 +117,7 @@ export default function Navbar() {
                                     )}
                                 </div>
                                 <button
-                                    onClick={logout}
+                                    onClick={handleLogout}
                                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-error hover:bg-red-50 transition-colors"
                                     title="Sign Out"
                                 >
@@ -170,7 +177,7 @@ export default function Navbar() {
                                     Dashboard
                                 </Link>
                                 <button
-                                    onClick={() => { logout(); setMobileOpen(false); }}
+                                    onClick={() => { handleLogout(); setMobileOpen(false); }}
                                     className="block w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-error hover:bg-red-50"
                                 >
                                     Sign Out
