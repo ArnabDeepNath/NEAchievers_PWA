@@ -58,55 +58,64 @@ export default function Navbar() {
                         {loading ? (
                             <div className="w-8 h-8 rounded-full bg-surface-dark animate-pulse" />
                         ) : user && userProfile ? (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setProfileOpen(!profileOpen)}
-                                    className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border border-border hover:border-primary/30 hover:bg-primary-50 transition-all"
-                                >
-                                    <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
-                                        {userProfile.displayName?.charAt(0)?.toUpperCase() || 'U'}
-                                    </div>
-                                    <span className="text-sm font-medium text-navy max-w-[100px] truncate">
-                                        {userProfile.displayName || 'User'}
-                                    </span>
-                                    <ChevronDown className={`w-3.5 h-3.5 text-navy-soft transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {profileOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-border z-50 py-2 animate-fade-in-up">
-                                            <div className="px-4 py-2.5 border-b border-border">
-                                                <p className="text-sm font-semibold text-navy truncate">{userProfile.displayName}</p>
-                                                <p className="text-xs text-navy-soft truncate">{userProfile.email}</p>
-                                                <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase rounded-full gradient-primary text-white">
-                                                    {role}
-                                                </span>
-                                            </div>
-                                            <Link
-                                                href={dashboardPath}
-                                                onClick={() => setProfileOpen(false)}
-                                                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy hover:bg-primary-50 hover:text-primary transition-colors"
-                                            >
-                                                <LayoutDashboard className="w-4 h-4" /> Dashboard
-                                            </Link>
-                                            <Link
-                                                href={`${dashboardPath}/profile`}
-                                                onClick={() => setProfileOpen(false)}
-                                                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy hover:bg-primary-50 hover:text-primary transition-colors"
-                                            >
-                                                <User className="w-4 h-4" /> Profile
-                                            </Link>
-                                            <hr className="my-1 border-border" />
-                                            <button
-                                                onClick={() => { logout(); setProfileOpen(false); }}
-                                                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-error hover:bg-red-50 transition-colors"
-                                            >
-                                                <LogOut className="w-4 h-4" /> Sign Out
-                                            </button>
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setProfileOpen(!profileOpen)}
+                                        className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border border-border hover:border-primary/30 hover:bg-primary-50 transition-all"
+                                    >
+                                        <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
+                                            {userProfile.displayName?.charAt(0)?.toUpperCase() || 'U'}
                                         </div>
-                                    </>
-                                )}
+                                        <span className="text-sm font-medium text-navy max-w-[100px] truncate">
+                                            {userProfile.displayName || 'User'}
+                                        </span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-navy-soft transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {profileOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-border z-50 py-2 animate-fade-in-up">
+                                                <div className="px-4 py-2.5 border-b border-border">
+                                                    <p className="text-sm font-semibold text-navy truncate">{userProfile.displayName}</p>
+                                                    <p className="text-xs text-navy-soft truncate">{userProfile.email}</p>
+                                                    <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase rounded-full gradient-primary text-white">
+                                                        {role}
+                                                    </span>
+                                                </div>
+                                                <Link
+                                                    href={dashboardPath}
+                                                    onClick={() => setProfileOpen(false)}
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy hover:bg-primary-50 hover:text-primary transition-colors"
+                                                >
+                                                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                                                </Link>
+                                                <Link
+                                                    href={`${dashboardPath}/profile`}
+                                                    onClick={() => setProfileOpen(false)}
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy hover:bg-primary-50 hover:text-primary transition-colors"
+                                                >
+                                                    <User className="w-4 h-4" /> Profile
+                                                </Link>
+                                                <hr className="my-1 border-border" />
+                                                <button
+                                                    onClick={() => { logout(); setProfileOpen(false); }}
+                                                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-error hover:bg-red-50 transition-colors"
+                                                >
+                                                    <LogOut className="w-4 h-4" /> Sign Out
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={logout}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-error hover:bg-red-50 transition-colors"
+                                    title="Sign Out"
+                                >
+                                    <LogOut className="w-4 h-4" /> Logout
+                                </button>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
