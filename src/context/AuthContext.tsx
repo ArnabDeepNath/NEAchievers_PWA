@@ -29,6 +29,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper: race a promise against a timeout
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+    return Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+    ]);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -37,7 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchProfile = useCallback(async (firebaseUser: User) => {
         try {
-            const profile = await getUserProfile(firebaseUser.uid);
+            // Timeout after 5s — if Firestore is unreachable, don't block the UI
+            const profile = await withTimeout(
+                getUserProfile(firebaseUser.uid),
+                5000,
+                null
+            );
             if (profile) {
                 setUserProfile(profile);
                 setRole(profile.role);
@@ -59,8 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
         });
 
-        // Safety timeout: if onAuthStateChanged never fires (Firebase not configured),
-        // still show the Log In / Sign Up buttons after 3 seconds
+        // Safety timeout: if onAuthStateChanged never fires, still show UI
         const timeout = setTimeout(() => {
             setLoading(false);
         }, 3000);
@@ -73,35 +85,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         const cred = await signInWithEmailAndPassword(auth, email, password);
-        await fetchProfile(cred.user);
+        // Don't block login on profile fetch — fire and forget
+        fetchProfile(cred.user).catch(console.error);
     };
 
     const register = async (email: string, password: string, name: string, role: UserRole) => {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
-        await createUserProfile(cred.user.uid, {
-            email,
-            displayName: name,
-            role,
-            createdAt: new Date().toISOString(),
-        });
-        await fetchProfile(cred.user);
+        // Try to create the Firestore profile, but don't block on it
+        try {
+            await withTimeout(
+                createUserProfile(cred.user.uid, {
+                    email,
+                    displayName: name,
+                    role,
+                    createdAt: new Date().toISOString(),
+                }),
+                5000,
+                undefined
+            );
+        } catch (error) {
+            console.error('Error creating user profile:', error);
+        }
+        fetchProfile(cred.user).catch(console.error);
     };
 
     const loginWithGoogle = async (defaultRole: UserRole = 'student') => {
         const provider = new GoogleAuthProvider();
         const cred = await signInWithPopup(auth, provider);
-        const existingProfile = await getUserProfile(cred.user.uid);
-        if (!existingProfile) {
-            await createUserProfile(cred.user.uid, {
-                email: cred.user.email || '',
-                displayName: cred.user.displayName || '',
-                photoURL: cred.user.photoURL || undefined,
-                role: defaultRole,
-                createdAt: new Date().toISOString(),
-            });
+        try {
+            const existingProfile = await withTimeout(getUserProfile(cred.user.uid), 5000, null);
+            if (!existingProfile) {
+                await withTimeout(
+                    createUserProfile(cred.user.uid, {
+                        email: cred.user.email || '',
+                        displayName: cred.user.displayName || '',
+                        photoURL: cred.user.photoURL || undefined,
+                        role: defaultRole,
+                        createdAt: new Date().toISOString(),
+                    }),
+                    5000,
+                    undefined
+                );
+            }
+        } catch (error) {
+            console.error('Error with Google profile:', error);
         }
-        await fetchProfile(cred.user);
+        fetchProfile(cred.user).catch(console.error);
     };
 
     const logout = async () => {
