@@ -59,7 +59,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        // Safety timeout: if onAuthStateChanged never fires (Firebase not configured),
+        // still show the Log In / Sign Up buttons after 3 seconds
+        const timeout = setTimeout(() => {
+            setLoading(false);
+        }, 3000);
+
+        return () => {
+            unsubscribe();
+            clearTimeout(timeout);
+        };
     }, [fetchProfile]);
 
     const login = async (email: string, password: string) => {
